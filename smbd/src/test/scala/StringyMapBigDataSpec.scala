@@ -13,7 +13,7 @@ package api {
   sealed trait Receptacle
   case class Teapot(a: String, b: Int, c: Boolean) extends Receptacle
   case class Bottle(foo: String, bar: Double) extends Receptacle
-  case object Glass extends Receptacle
+  case class Glass() extends Receptacle
 
   class Beans
   case class Coffee(z: Beans)
@@ -39,7 +39,7 @@ package app {
   class StringyMapBigDataSpec extends FlatSpec with Matchers {
     val teapot = Teapot("foo", 42, true)
     val bottle = Bottle("hello", 1.23)
-    val glass = Glass
+    val glass = Glass()
 
     "StringyMapBigData" should "marshall a case class" in {
       val stringyMap = teapot.toProperties
@@ -53,15 +53,19 @@ package app {
       stringyMap.put("a", "foo")
       stringyMap.put("b", new java.lang.Integer(42))
       stringyMap.put("c", new java.lang.Boolean(true))
+      stringyMap.put("foo", "hello")
+      stringyMap.put("bar", new java.lang.Double(1.23))
 
+      stringyMap.as[Glass] shouldBe glass
       stringyMap.as[Teapot] shouldBe teapot
+      stringyMap.as[Bottle] shouldBe bottle
     }
 
     it should "correctly fail to unmarshall to a case class" in {
       val stringyMap = new StringyMap()
       stringyMap.put("z", "foo")
 
-      TeapotF.fromProperties(stringyMap) shouldBe Left("some sensible error here")
+      TeapotF.fromProperties(stringyMap) shouldBe Left("No value in map for a")
     }
 
     it should "round trip sealed traits" in {
